@@ -85,6 +85,41 @@ class Filesystem
     }
 
     /**
+     * Copies a file
+     *
+     * @param string $sourceKey
+     * @param string $targetKey
+     *
+     * @return boolean                  TRUE if the copy was successful
+     * @throws Exception\FileNotFound   when sourceKey does not exist
+     * @throws Exception\UnexpectedFile when targetKey exists
+     * @throws \RuntimeException        when cannot copy
+     * @throws \BadMethodCallException  when adapter does not support copy
+     */
+    public function copy($sourceKey, $targetKey)
+    {
+        $this->assertHasFile($sourceKey);
+
+        if ($this->has($targetKey)) {
+            throw new Exception\UnexpectedFile($targetKey);
+        }
+
+        if (!method_exists($this->adapter, 'copy')) {
+            throw new \BadMethodCallException('This adapter does not support the copy method.');
+        }
+
+        if (!$this->adapter->copy($sourceKey, $targetKey)) {
+            throw new \RuntimeException(sprintf('Could not copy the "%s" key to "%s".', $sourceKey, $targetKey));
+        }
+
+        if ($this->isFileInRegister($sourceKey)) {
+            $this->fileRegister[$targetKey] = $this->fileRegister[$sourceKey];
+        }
+
+        return true;
+    }
+
+    /**
      * Returns the file matching the specified key
      *
      * @param string  $key    Key of the file

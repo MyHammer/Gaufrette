@@ -111,6 +111,34 @@ class AwsS3 implements Adapter,
 
         try {
             $this->service->copyObject($options);
+            return $this->delete($sourceKey);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Copies a file
+     *
+     * @param string $sourceKey
+     * @param string $targetKey
+     *
+     * @return boolean
+     *
+     * @throws \RuntimeException
+     */
+    public function copy($sourceKey, $targetKey)
+    {
+        $this->ensureBucketExists();
+        $options = $this->getOptions(
+            $targetKey,
+            array(
+                'CopySource' => $this->bucket.'/'.$this->computePath($sourceKey),
+            )
+        );
+
+        try {
+            $this->service->copyObject($options);
             return true;
         } catch (\Exception $e) {
             return false;
